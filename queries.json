@@ -1,0 +1,244 @@
+{"_id":"_design/A_SPEED_OVER_100","_rev":"1-a9f1b4538cd07e0b37df997f43a515a9","language":"javascript","views":{"A_SPEED_OVER_100":{"map":"function(doc) {
+
+  if(doc.speed >= 100)
+  	emit("speed", doc.speed);
+
+}","reduce":"_count"}}}{"_id":"_design/A_SPEED_OVER_100","_rev":"1-a9f1b4538cd07e0b37df997f43a515a9","language":"javascript","views":{"A_SPEED_OVER_100":{"map":"function(doc) {
+
+  if(doc.speed >= 100)
+  	emit("speed", doc.speed);
+
+}","reduce":"_count"}}}
+
+
+
+
+
+{"_id":"_design/B_FOSTER_NB_TOTAL_VOLUME","_rev":"1-82d2dd2c9189856ac18b4c4637a48ee8","language":"javascript","views":{"B_FOSTER_NB_TOTAL_VOLUME":{"map":"function(doc) {
+
+  if(doc.stationid === "1047"
+	&& doc.starttime > "2011-09-21 00:00:00" 
+	&& doc.starttime < "2011-09-22 00:00:00")
+
+  	emit("volume", parseInt(doc.volume));
+
+}","reduce":"function(key, value){
+
+	return sum(value);
+
+}"}}}
+
+
+{"_id":"_design/C_FOSTER_NB_TRAVEL_TIME_5MIN","_rev":"1-b6c235ed74f35a9f70057b48562d0de3","language":"javascript","views":{"C_FOSTER_NB_TRAVEL_TIME_5MIN":{"map":"function(doc) {
+	var temp = doc.starttime.split(" "); 	
+	var time = temp[1];
+	var time_split = time.split(":");
+	var hour = time_split[0];
+	var minutes = time_split[1];
+	var seconds = time_split[2];
+
+	if(doc.starttime > "2011-09-22 00:00:00"
+	&& doc.starttime < "2011-09-23 00:00:00"
+	&& doc.stationid === "1047"
+	&& doc.speed != "")
+ 	{
+
+		if(minutes[1] < "5")
+		{
+			var key_temp = hour.concat(minutes[0]);
+			var key = key_temp.concat("0");
+			emit(key, parseInt(doc.speed));
+		} else {
+			var key_temp = hour.concat(minutes[0]);
+			var key = key_temp.concat("5");
+			emit(key, parseInt(doc.speed));
+		}
+	}
+}","reduce":"
+function(keys, values, rereduce) {
+   var ave = values.reduce(function(a, b) { return a + b.sum }, 0)/values.reduce(function(a, b) { return a + b.count }, 0);	
+
+	if (rereduce) {
+        return {
+            'sum': values.reduce(function(a, b) { return a + b.sum }, 0),
+            'min': values.reduce(function(a, b) { return Math.min(a, b.min) }, Infinity),
+            'max': values.reduce(function(a, b) { return Math.max(a, b.max) }, -Infinity),
+            'count': values.reduce(function(a, b) { return a + b.count }, 0),
+            'sumsqr': values.reduce(function(a, b) { return a + b.sumsqr }, 0),
+	    'ave': values.reduce(function(a, b) { return a + b.sum }, 0)/values.reduce(function(a, b) { return a + b.count }, 0),	
+            'AveTime': (1.6/ave)*3600
+	}
+    } else {
+        return {
+            'sum': sum(values),
+            'min': Math.min.apply(null, values),
+            'max': Math.max.apply(null, values),
+            'count': values.length,
+	    'ave': (sum(values)/values.length),
+            'AveTime': (1.6/(sum(values)/values.length))*3600,
+	    'sumsqr': (function() {
+            var sumsqr = 0;
+
+            values.forEach(function (value) {
+                sumsqr += value * value;
+            });
+
+            return sumsqr;
+            })(),
+		
+	    
+        }
+    }
+}"}}}
+
+
+
+{"_id":"_design/D_FOSTER_NB_AVG_TRAVEL_TIME_79_46","_rev":"1-cf930ef9b86dd2974b72e31073822452","language":"javascript","views":{"D_FOSTER_NB_AVG_TRAVEL_TIME_79_46":{"map":"function(doc) {
+	if(doc.stationid == 1047
+	&& doc.starttime > "2011-09-22 16:00:00" 
+	&& doc.starttime < "2011-09-22 18:00:00" 
+	&& doc.speed != ""){
+		
+ 		 emit("4pm-6pm", parseInt(doc.speed));
+	}
+
+
+	if(doc.stationid == 1047
+	&& doc.starttime > "2011-09-22 07:00:00" 
+	&& doc.starttime < "2011-09-22 09:00:00" 
+	&& doc.speed != ""){
+		
+ 		 emit("7am-9am", parseInt(doc.speed));
+ 	}	
+
+
+
+		
+}","reduce":"
+function(keys, values, rereduce) {
+   var ave = values.reduce(function(a, b) { return a + b.sum }, 0)/values.reduce(function(a, b) { return a + b.count }, 0);	
+
+	if (rereduce) {
+        return {
+            'sum': values.reduce(function(a, b) { return a + b.sum }, 0),
+            'min': values.reduce(function(a, b) { return Math.min(a, b.min) }, Infinity),
+            'max': values.reduce(function(a, b) { return Math.max(a, b.max) }, -Infinity),
+            'count': values.reduce(function(a, b) { return a + b.count }, 0),
+            'sumsqr': values.reduce(function(a, b) { return a + b.sumsqr }, 0),
+	    'ave': values.reduce(function(a, b) { return a + b.sum }, 0)/values.reduce(function(a, b) { return a + b.count }, 0),	
+            'AveTime': (1.6/ave)*3600
+	}
+    } else {
+        return {
+            'sum': sum(values),
+            'min': Math.min.apply(null, values),
+            'max': Math.max.apply(null, values),
+            'count': values.length,
+	    'ave': (sum(values)/values.length),
+            'AveTime': (1.6/(sum(values)/values.length))*3600,
+	    'sumsqr': (function() {
+            var sumsqr = 0;
+
+            values.forEach(function (value) {
+                sumsqr += value * value;
+            });
+
+            return sumsqr;
+            })(),
+		
+	    
+        }
+    }
+}"}}}
+
+
+
+
+
+{"_id":"_design/E_205_NB_TRAVEL_TIME_79_46","_rev":"1-174d7900eea25acd311df56794e78d50","language":"javascript","views":{"E_205_NB_TRAVEL_TIME_79_46":{"map":"function(doc) {
+
+//TODO checks to make sure station len is not null
+	a_list = ["1045", "1046", "1047", "1048", "1117", "1140", "1142"]
+
+	if(doc.starttime > "2011-09-22 07:00:00"
+	&& doc.starttime < "2011-09-22 09:00:00"
+	&& a_list.indexOf(doc.stationid) >= 0)
+	{
+ 		emit([doc.stationid,"AM"],{"speed":parseInt(doc.speed),"len":parseFloat(doc.length)});
+		//emit(doc.stationid, null);
+	}
+
+	if(doc.starttime > "2011-09-22 16:00:00"
+	&& doc.starttime < "2011-09-22 18:00:00"
+	&& a_list.indexOf(doc.stationid) >= 0)
+	{
+ 		emit([doc.stationid,"PM"],{"speed":parseInt(doc.speed),"len":parseFloat(doc.length)});
+		//emit(doc.stationid, null);
+	}
+
+} ","reduce":"function(key, values, rereduce){
+//THIS IS GOOD 
+//Returns len/avespeed for a single station
+//client code will need to sum these for all
+//the stations and mult by 60
+
+	if(rereduce){
+	  var speedSum = values.reduce(function(a, b) { return a + b.speedSum}, 0);
+	  var count = values.reduce(function(a, b) { return a + b.count }, 0);
+	  var aveSpeed = speedSum/count;
+	  var stationlen = values[0].stationLen;
+	  return {"speedSum": speedSum,
+		  "aveSpeed": aveSpeed,
+ 		  "count": count,
+		  "stationLen": stationlen,
+		  "aveStationTravTime": stationlen/aveSpeed};
+	}
+	var speedSum = values.reduce(function(a, b) { return a + b.speed }, 0);
+	var aveSpeed = speedSum/values.length;
+	var stationlen = values[0].len;
+	return {"speedSum": speedSum,
+		"aveSpeed": aveSpeed,
+		"count": values.length,
+		"stationLen": stationlen,
+		"aveStationTravTime": stationlen/aveSpeed};
+
+}"}}}
+
+
+
+
+{"_id":"_design/f_graph","_rev":"19-5dab91848693a955a480caecda0f905d","language":"javascript","views":{"f_graph":{"map":"function(doc) {
+
+  if(doc.type == "graph")
+
+  emit(doc.type, {"_id":doc._id, "upstream":doc.upstream,
+			"downstream":doc.downstream});
+}
+","reduce":"
+function(key, value, rereduce){
+//check to see if your link is in a.
+//then check again just in case your link was added.
+//...then check again a few more times
+
+if(rereduce)
+return value;
+
+
+a = ["1046"]
+	
+
+for(i = 0; i < 20 ; i++){
+	for(x in value){
+	  if(a.indexOf(value[x].upstream) >= 0){
+		if(a.indexOf(value[x]._id) < 0)
+	  	a.push(value[x]._id);
+	  }
+	
+	}
+}
+	
+	return a;
+
+}"}}}
+
+
